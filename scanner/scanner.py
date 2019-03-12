@@ -1,25 +1,25 @@
 import ply.lex as lex
 
-literals = ['+', '-', '*', '/', '(', ')', '[', ']', '{', '}', '=', '<', '>', ':', '\'', ',', ';']
+literals = ['+', '-', '*', '/', '=', '<', '>', ':', '\'', ',', ';', '(', ')', '[', ']', '{', '}']
 
 reserved = {
     'if': 'IF',
     'else': 'ELSE',
+    'eye': 'EYE',
+    'zeros': 'ZEROS',
+    'ones': 'ONES',
+    'print': 'PRINT',
     'for': 'FOR',
     'while': 'WHILE',
     'break': 'BREAK',
     'continue': 'CONTINUE',
     'return': 'RETURN',
-    'eye': 'EYE',
-    'zeros': 'ZEROS',
-    'ones': 'ONES',
-    'print': 'PRINT',
 }
 
 tokens = ["REALNUM", "INTNUM", 'ID', 'STRING',
           "DOTADD", "DOTSUB", "DOTMUL", "DOTDIV",
           "ADDASSIGN", "SUBASSIGN", "MULASSIGN", "DIVASSIGN",
-          "LEQ", "GEQ", "NEQ", "EQ",
+          "LEQ", "GEQ", "NOTEQ", "EQ",
           ] + list(reserved.values())
 
 t_DOTADD = r'\.\+'
@@ -32,7 +32,7 @@ t_MULASSIGN = r'\*='
 t_DIVASSIGN = r'/='
 t_LEQ = r'<='
 t_GEQ = r'>='
-t_NEQ = r'!='
+t_NOTEQ = r'!='
 t_EQ = r'=='
 
 t_ignore = '  \t'
