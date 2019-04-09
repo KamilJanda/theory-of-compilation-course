@@ -184,3 +184,7 @@ dmypy.json
 
 #parser output
 parser.out
+
+#examples
+example1.m
+resources/
