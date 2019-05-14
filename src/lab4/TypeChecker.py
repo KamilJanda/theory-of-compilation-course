@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from src.AST.AST import *
 from src.AST import AST
 from src.lab4.OperationsTypes import result_types
 from src.lab4.SymbolTable import SymbolTable, VariableSymbol, Matrix, BadType
