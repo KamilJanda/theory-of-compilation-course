@@ -1,85 +1,103 @@
+import sys
 import ply.lex as lex
 
-literals = ['+', '-', '*', '/', '=', '<', '>', ':', '\'', ',', ';', '(', ')', '[', ']', '{', '}']
 
-reserved = {
-    'if': 'IF',
-    'else': 'ELSE',
-    'eye': 'EYE',
-    'zeros': 'ZEROS',
-    'ones': 'ONES',
-    'print': 'PRINT',
-    'for': 'FOR',
-    'while': 'WHILE',
-    'break': 'BREAK',
-    'continue': 'CONTINUE',
-    'return': 'RETURN',
-}
+class Scanner:
+    def __init__(self, text):
+        self.input = text
+        self.lexer = lex.lex(object=self)
+        self.lexer.input(text)
 
-tokens = ["REALNUM", "INTNUM", 'ID', 'STRING',
-          "DOTADD", "DOTSUB", "DOTMUL", "DOTDIV",
-          "ADDASSIGN", "SUBASSIGN", "MULASSIGN", "DIVASSIGN",
-          "LEQ", "GEQ", "NOTEQ", "EQ",
-          ] + list(reserved.values())
+    # te które rozpoznajemy za pomocą jednego znaku
+    literals = "+-*/=()[]{}:\',;\""
 
-t_DOTADD = r'\.\+'
-t_DOTSUB = r'\.-'
-t_DOTMUL = r'\.\*'
-t_DOTDIV = r'\./'
-t_ADDASSIGN = r'\+='
-t_SUBASSIGN = r'-='
-t_MULASSIGN = r'\*='
-t_DIVASSIGN = r'/='
-t_LEQ = r'<='
-t_GEQ = r'>='
-t_NOTEQ = r'!='
-t_EQ = r'=='
+    # wyrażenia zarezerwowane
+    reserved = {
+        'if': 'IF', 'else': 'ELSE', 'for': 'FOR', 'while': 'WHILE',
+        'break': 'BREAK', 'continue': 'CONTINUE', 'return': 'RETURN',
+        'eye': 'EYE', 'zeros': 'ZEROS', 'ones': 'ONES',
+        'print': 'PRINT'
+    }
 
-t_ignore = '  \t'
+    # tokeny
 
+    tokens = (
+        'DOTADD', 'DOTSUB', 'DOTMUL', 'DOTDIV',
+        'ADDASSIGN', 'SUBASSIGN', 'MULASSIGN', 'DIVASSIGN',
+        'LESS', 'GREATER', "LESSEQ", "GREATEREQ", "NOTEQ", 'EQ',
+        'IF', 'ELSE', 'FOR', 'WHILE',
+        'BREAK', 'CONTINUE', 'RETURN',
+        'EYE', 'ZEROS', 'ONES',
+        'PRINT',
+        'INTNUM', 'FLOATNUM', 'STRING',
+        'ID'
+    )
 
-def t_ID(t):
-    r'[A-Z]'
-    return t
+    # tokeny związane z operacjami arytmetycznymi na macierzach
 
+    t_DOTADD = r'\.\+'
+    t_DOTSUB = r'\.-'
+    t_DOTMUL = r'\.\*'
+    t_DOTDIV = r'\./'
 
-def t_INTNUM(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
+    # tokeny do operatorow przypisania
 
+    t_ADDASSIGN = r'\+='
+    t_SUBASSIGN = r'-='
+    t_MULASSIGN = r'\*='
+    t_DIVASSIGN = r'/='
 
-def T_REALNUM(t):
-    r"([0-9]+)(\.)([0-9]+)?|(\.)([0-9]+)"
-    t.value = float(t.value)
-    return t
+    # tokeny do operatorow porownania
 
+    t_LESS = r'<'
+    t_GREATER = r'>'
+    t_LESSEQ = r'<='
+    t_GREATEREQ = r'>='
+    t_NOTEQ = r'\!='
+    t_EQ = r'=='
 
-def t_COMMENT(t):
-    r'\#.*'
-    pass
+    # t_STRING = r'".*"'
+    t_STRING = r""""([^"\\\n]|\\.)*" """
 
+    # ignorowanie bialych znakow i komenatrzy
 
-def t_STRING(t):
-    r"\"([^\\']+|\\'|\\\\)*\""
-    t.value = t.value[1:-1]
-    return t
+    t_ignore = r' '
+    t_ignore_COMMENT = r'\#.*'  # koniec linii
 
+    def find_tok_column(self, token):
+        last_cr = self.lexer.lexdata.rfind('\n', 0, token.lexpos)
+        if last_cr < 0:
+            last_cr = 0
+        return token.lexpos - last_cr
 
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
+    # oznaczanie wyrażenia zarezerwowanego lub domyślnie jako ID
 
+    def t_ID(self, t):
+        r'[a-zA-Z_][a-zA-Z_0-9]*'
+        t.type = self.reserved.get(t.value, 'ID')  # któreś z rozpoznanych słów zastrzeżonych, domyslnie jako id
+        return t
 
-def t_error(t):
-    print
-    "Illegal character '%s'" % t.value[0]
-    t.lexer.skip(1)
+    # oznaczanie jako int
 
+    def t_FLOATNUM(self, t):
+        r'\d*\.\d+'
+        t.value = float(t.value)
+        return t
 
-def find_column(text, tok):
-    line_start = text.rfind('\n', 0, tok.lexpos) + 1
-    return (tok.lexpos - line_start) + 1
+    # oznaczanie jako float
+    def t_INTNUM(self, t):
+        r'\d+'  # te które nie zawierają kropki
+        t.value = int(t.value)
+        return t
 
+    # numerowanie linii
 
-lexer = lex.lex()
+    def t_newline(self, t):
+        r'\n+'
+        t.lexer.lineno += len(t.value)
+
+    # sygnalizacja błędu
+
+    def t_error(self, t):
+        print("line %d: illegal character '%s'" % (t.lineno, t.value[0]))
+        t.lexer.skip(1)

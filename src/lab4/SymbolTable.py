@@ -1,8 +1,5 @@
-#!/usr/bin/python
-
-class Symbol:
+class Symbol():
     pass
-
 
 class VariableSymbol(Symbol):
 
@@ -10,19 +7,23 @@ class VariableSymbol(Symbol):
         self.name = name
         self.type = type
 
+    #
     def __str__(self):
         return str(self.type)
 
 
-class VectorType(object):
-
-    def __init__(self, dims, sizes, type):
-        self.dims = dims
-        self.sizes = sizes
-        self.type = type
+class Matrix(object):
+    def __init__(self, dim_X, dim_Y):
+        self.dim_X = dim_X
+        self.dim_Y = dim_Y
 
     def __str__(self):
-        return 'vector'
+        return "Matrix"
+
+
+class BadType(object):
+    def __str__(self):
+        return "bad type"
 
 
 class SymbolTable(object):
@@ -30,25 +31,19 @@ class SymbolTable(object):
     def __init__(self, parent, name):  # parent scope and symbol table name
         self.parent = parent
         self.name = name
-        self.variables = {}
+        self.symbols = {}
 
     def put(self, name, symbol):  # put variable symbol or fundef under <name> entry
-        self.variables[name] = symbol
-
-    def get(self, name):  # get variable symbol or fundef from <name> entry
-        try:
-            return self.variables[name]
-        except KeyError:
-            if self.parent is not None:
-                return self.getParentScope().get(name)
-            else:
-                return None
+        self.symbols[name] = symbol
 
     def getParentScope(self):
         return self.parent
 
-    def pushScope(self, name):
-        return SymbolTable(self, name)
-
-    def popScope(self):
-        return self.parent
+    def get(self, name):
+        try:
+            symbol = self.symbols[name]
+            return symbol
+        except:
+            if self.parent is not None:
+                return self.getParentScope().get(name)
+            return None
